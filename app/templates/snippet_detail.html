@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gist Detail</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        p {
+            color: #555;
+        }
+
+        pre {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Gist Detail</h1>
+
+        {% if gist %}
+            <p>Description: {{ gist['description'] or 'Untitled' }}</p>
+            
+            {% set files = gist.get('files', {}) %}
+            
+            {% if files %}
+                {% for filename, file_info in files.items() %}
+                    <h2>File: {{ filename }}</h2>
+                    <pre>{{ file_info['content'] }}</pre>
+                {% endfor %}
+            {% else %}
+                <p>No files available.</p>
+            {% endif %}
+        {% else %}
+            <p>Gist not found.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

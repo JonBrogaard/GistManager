@@ -1,0 +1,120 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gist Manager</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-btn {
+            background-color: #d9534f;
+            color: #fff;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .gist-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        .gist-link {
+            display: inline-block;
+            margin-top: 10px;
+            margin-right: 10px;
+            color: #337ab7; /* Link color */
+            text-decoration: none;
+        }
+
+        .gist-link:hover {
+            text-decoration: underline;
+        }
+
+        .edit-btn, .delete-btn, .star-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .edit-btn {
+            background-color: #5bc0de; /* Edit button color */
+        }
+
+        .delete-btn {
+            background-color: #d9534f; /* Delete button color */
+        }
+
+        .star-btn {
+            background-color: #f0ad4e; /* Star button color */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gist Manager</h1>
+    </header>
+    <div class="container">
+        <h1>Welcome to Gist Manager</h1>
+        {% if user_info %}
+            <p>Hello, {{ username }}!</p>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+
+            <!-- Display Gists -->
+            <h2>Your Gists</h2>
+            {% for gist in gists %}
+                <div class="gist-card">
+                    <h3>{{ gist['description'] or 'Untitled' }}</h3>
+                    <p>File count: {{ gist['files']|length }}</p>
+                    <a href="{{ url_for('snippet_detail', gist_id=gist['id']) }}" class="gist-link">View</a>
+                    <a href="{{ url_for('edit_snippet', gist_id=gist['id']) }}" class="gist-link edit-btn">Edit</a>
+                    <a href="{{ url_for('delete_snippet', gist_id=gist['id']) }}" class="gist-link delete-btn">Delete</a>
+                    {% if gist['starred'] %}
+                        <a href="{{ url_for('unstar_snippet', gist_id=gist['id']) }}" class="gist-link star-btn">Unstar</a>
+                    {% else %}
+                        <a href="{{ url_for('star_snippet', gist_id=gist['id']) }}" class="gist-link star-btn">Star</a>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            
+            <!-- Create Gist -->
+            <h2>Create a New Gist</h2>
+            <a href="{{ url_for('create_snippet') }}" class="gist-link">Create Gist</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Login with GitHub</a>
+        {% endif %}
+    </div>
+</body>
+</html>
