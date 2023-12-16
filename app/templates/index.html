@@ -77,9 +77,6 @@
             background-color: #d9534f; /* Delete button color */
         }
 
-        .star-btn {
-            background-color: #f0ad4e; /* Star button color */
-        }
     </style>
 </head>
 <body>
@@ -101,11 +98,6 @@
                     <a href="{{ url_for('snippet_detail', gist_id=gist['id']) }}" class="gist-link">View</a>
                     <a href="{{ url_for('edit_snippet', gist_id=gist['id']) }}" class="gist-link edit-btn">Edit</a>
                     <a href="{{ url_for('delete_snippet', gist_id=gist['id']) }}" class="gist-link delete-btn">Delete</a>
-                    {% if gist['starred'] %}
-                        <a href="{{ url_for('unstar_snippet', gist_id=gist['id']) }}" class="gist-link star-btn">Unstar</a>
-                    {% else %}
-                        <a href="{{ url_for('star_snippet', gist_id=gist['id']) }}" class="gist-link star-btn">Star</a>
-                    {% endif %}
                 </div>
             {% endfor %}
             

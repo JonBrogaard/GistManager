@@ -1,7 +1,22 @@
 from . import app
 from flask import render_template, redirect, url_for, request, session, redirect
-from .github import github, get_gists, create_gist, update_gist, delete_gist, star_gist, unstar_gist, get_starred_gists
+from .github import github, get_gists, create_gist, update_gist, delete_gist, get_gist_comments, comment_gist, comment_delete
 import requests
+from datetime import datetime
+
+def time_ago(timestamp):
+    created_at = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.utcnow()
+    delta = now - created_at
+
+    if delta.seconds < 60:
+        return f"{delta.seconds} seconds"
+    elif delta.seconds < 3600:
+        minutes = delta.seconds // 60
+        return f"{minutes} minutes"
+    else:
+        hours = delta.seconds // 3600
+        return f"{hours} hours"
 
 @app.route('/')
 def index():
@@ -9,29 +24,25 @@ def index():
     user_info = session.get('user_info')
     
     if user_info:
-        # Process user_info
-        username = user_info.get('login', 'Unknown')  # Use 'Unknown' as default if 'login' is not present
 
-        # Check if 'access_token' is present in user_info
+        username = user_info.get('login', 'Unknown')  
+
         access_token = user_info.get('access_token')
 
         if access_token:
-            # Retrieve gists and starred gists using the appropriate functions
-            gists = get_gists(access_token=access_token)
-            starred_gists = get_starred_gists(access_token)
 
-            # Check if gists is None
+            gists = get_gists(access_token=access_token)
+
             if gists is None:
-                # Handle the case when gists is None (e.g., log an error, set a default value, etc.)
                 gists = []
 
+            # Retrieve comments for each gist
+            comments = [get_gist_comments(gist['id']) for gist in gists]
+
             # Pass the 'user_info' directly to the template
-            return render_template('index.html', user_info=user_info, gists=gists, starred_gists=starred_gists)
+            return render_template('index.html', user_info=username, gists=gists, comments=comments, time_ago=time_ago)
 
-    # If user_info or access_token is not available, show the login link
     return render_template('index.html')
-
-
 
 @app.route('/login')
 def login():
@@ -64,12 +75,11 @@ def authorized():
     # Add the user_info to the session
     session['user_info'] = {
         'access_token': resp['access_token'],
-        'login': user_info.data['login'],  # Use the correct key for login
+        'login': user_info.data['login'],  
         'scope': resp['scope'],
         'token_type': resp['token_type']
     }
 
-    # Redirect to the home page
     return redirect(url_for('index'))
 
 @app.route('/snippet/<gist_id>')
@@ -78,18 +88,21 @@ def snippet_detail(gist_id):
     user_info = session.get('user_info')
 
     if user_info:
-        # Print user_info for debugging
-        print(user_info)
-
         # Process user_info
         username = user_info.get('login', 'Unknown')  # Use 'Unknown' as default if 'login' is not present
 
         # Retrieve the detailed information about the specific Gist
         gist = get_gists(gist_id=gist_id, access_token=user_info['access_token'])
 
-        return render_template('snippet_detail.html', user_info=username, gist=gist)
+        if gist is None:
+            # Redirect to the index page if the Gist is not found
+            return redirect(url_for('index'))
 
-    # If user_info is not available, show the login link
+        # Fetch comments for the gist
+        comments = get_gist_comments(gist_id)
+
+        return render_template('snippet_detail.html', user_info=username, gist=gist, comments=comments, time_ago=time_ago)
+
     return render_template('index.html')
 
 @app.route('/snippet/create', methods=['GET', 'POST'])
@@ -100,15 +113,12 @@ def create_snippet():
         filename = request.form.get('filename')
         code = request.form.get('code')
 
-        # Create the new snippet
         create_gist(description, filename, code)
 
-        # Redirect to the index page after creating the snippet
         return redirect(url_for('index'))
 
     # Display the form for creating a new snippet
     return render_template('create_snippet.html')
-
 
 @app.route('/snippet/edit/<gist_id>', methods=['GET', 'POST'])
 def edit_snippet(gist_id):
@@ -125,7 +135,6 @@ def edit_snippet(gist_id):
 
         return redirect(url_for('index'))
 
-    # Display the form for editing the snippet
     return render_template('edit_snippet.html', snippet=snippet)
 
 @app.route('/snippet/delete/<gist_id>')
@@ -133,12 +142,16 @@ def delete_snippet(gist_id):
     delete_gist(gist_id)
     return redirect(url_for('index'))
 
-@app.route('/snippet/star/<gist_id>')
-def star_snippet(gist_id):
-    star_gist(gist_id)
-    return redirect(url_for('index'))
+@app.route('/add_comment/<gist_id>', methods=['POST'])
+def add_comment(gist_id):
+    comment = request.form.get('comment')
+    if comment:
+        comment_gist(gist_id, comment)
 
-@app.route('/snippet/unstar/<gist_id>')
-def unstar_snippet(gist_id):
-    unstar_gist(gist_id)
-    return redirect(url_for('index'))
+    return redirect(url_for('snippet_detail', gist_id=gist_id))
+
+@app.route('/delete_comment/<gist_id>/<comment_id>', methods=['POST'])
+def delete_comment(gist_id, comment_id):
+    comment_delete(gist_id, comment_id)
+
+    return redirect(url_for('snippet_detail', gist_id=gist_id))

@@ -33,10 +33,6 @@ def get_gists(gist_id=None, access_token=None):
     if not access_token:
         # Retrieve the access token from the session if not provided
         access_token = get_github_oauth_token()
-
-        # If the access token is still not available, handle the case (return an error or raise an exception)
-    if not access_token:
-        return None
        
     if gist_id:
         # Fetch details for a specific Gist
@@ -50,13 +46,8 @@ def get_gists(gist_id=None, access_token=None):
         headers['Authorization'] = 'Bearer ' + access_token
 
     response = requests.get(url, headers=headers)
+    return response.json()
 
-    if response.status_code == 200:
-        return response.json()
-    else:
-        # Handle error cases, e.g., return None or raise an exception
-        return None
-    
 # Define functions for creating, updating, and deleting Gists
 def create_gist(description, filename, code):
     url = f'{GITHUB_API_URL}/gists'
@@ -82,20 +73,29 @@ def delete_gist(gist_id):
     response = requests.delete(url, headers={'Authorization': 'Bearer ' + get_github_oauth_token()})
     return response.status_code
 
-def star_gist(gist_id):
-    url = f'{GITHUB_API_URL}/gists/{gist_id}/star'
-    response = requests.put(url, headers={'Authorization': 'Bearer ' + get_github_oauth_token()})
-    return response.status_code
-
-def unstar_gist(gist_id):
-    url = f'{GITHUB_API_URL}/gists/{gist_id}/star'
-    response = requests.delete(url, headers={'Authorization': 'Bearer ' + get_github_oauth_token()})
-    return response.status_code
-
-def get_starred_gists(gist_id):
-    url = f'{GITHUB_API_URL}/gists/starred'
+def get_gist_comments(gist_id):
+    url = f'{GITHUB_API_URL}/gists/{gist_id}/comments'
     response = requests.get(url, headers={'Authorization': 'Bearer ' + get_github_oauth_token()})
     return response.json()
+
+def comment_gist(gist_id, comment):
+    url = f'{GITHUB_API_URL}/gists/{gist_id}/comments'
+    data = {'body': comment}
+    response = requests.post(url, json=data, headers={'Authorization': 'Bearer ' + get_github_oauth_token()})
+
+    if response.status_code == 201:
+        print('Comment added successfully')
+    else:
+        print(f'Failed to add comment. Status Code: {response.status_code}, Response: {response.text}')
+
+def comment_delete(gist_id, comment_id):
+    url = f'{GITHUB_API_URL}/gists/{gist_id}/comments/{comment_id}'
+    response = requests.delete(url, headers={'Authorization': 'Bearer ' + get_github_oauth_token()})
+
+    if response.status_code == 204:
+        print('Comment deleted successfully')
+    else:
+        print(f'Failed to delete comment. Status Code: {response.status_code}, Response: {response.text}')
 
 # OAuth token retrieval function
 def get_github_token():

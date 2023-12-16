@@ -12,7 +12,7 @@
             background-color: #f4f4f4;
         }
 
-        h1, h2 {
+        h1, h2, h3 {
             color: #333;
         }
 
@@ -26,6 +26,50 @@
             border-radius: 8px;
             padding: 10px;
             overflow: auto;
+        }
+
+        .comment-container {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+
+        .comment-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        .comment-form {
+            margin-top: 20px;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .comment-btn {
+            background-color: #5bc0de;
+            color: #fff;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .go-back-btn {
+            display: inline-block;
+            margin-top: 10px;
+            text-decoration: none;
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: #fff;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -46,6 +90,30 @@
             {% else %}
                 <p>No files available.</p>
             {% endif %}
+
+            <!-- Comments Section -->
+            <div class="comment-container">
+                <h3>Comments</h3>
+                {% if comments %}
+                    {% for comment in comments %}
+                        <div class="comment-card">
+                            <p>{{ comment['user']['login'] }} commented {{ time_ago(comment['created_at']) }} ago:</p>
+                            <p>{{ comment['body'] }}</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No comments available.</p>
+                {% endif %}
+
+                <!-- Comment Form -->
+                <form action="{{ url_for('add_comment', gist_id=gist['id']) }}" method="post" class="comment-form">
+                    <textarea name="comment" class="comment-input" placeholder="Add a comment"></textarea>
+                    <button type="submit" class="comment-btn">Add Comment</button>
+                </form>
+            </div>
+
+            <!-- Go Back Button -->
+            <a href="{{ url_for('index') }}" class="go-back-btn">Go Back</a>
         {% else %}
             <p>Gist not found.</p>
         {% endif %}
